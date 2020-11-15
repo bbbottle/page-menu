@@ -18,6 +18,10 @@ export default {
     },
   ],
 
+  watch: {
+    exclude: 'node_modules/**'
+  },
+
   plugins: [
     peerDepsExternal(),
     postcss({
@@ -29,9 +33,15 @@ export default {
     babel({
       exclude: 'node_modules/**',
       presets: ['@babel/preset-env', '@babel/preset-react'],
+      plugins: [
+        "@babel/plugin-syntax-export-default-from",
+        "@babel/plugin-proposal-class-properties"
+      ]
     }),
     commonjs(),
   ],
-
-  external: ['react', 'react-dom'],
+  external: [
+    'react',
+    'react-dom'
+  ],
 };
