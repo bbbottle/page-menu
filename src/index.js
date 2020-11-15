@@ -156,12 +156,13 @@ export class PageMenu extends React.PureComponent {
     ], depth)
   };
 
-  renderMenuIcon = () => {
+  renderMenuIcon = (isOpen) => {
     const {
       menuIconRenderer
     } = this.props;
     const params = {
       open: this.openMenu,
+      isOpen
     };
     const menuIcon = (
       <div
@@ -189,7 +190,7 @@ export class PageMenu extends React.PureComponent {
         className={cls(Style.menu)}
       >
         {this.renderMenuItems(children)}
-        {!isOpen && this.renderMenuIcon()}
+        {this.renderMenuIcon(isOpen)}
       </div>
     )
   }
