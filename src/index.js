@@ -40,11 +40,15 @@ export class PageMenu extends React.PureComponent {
     transitionDuration: PropTypes.number, // ms
     menuItemOffset: PropTypes.number,
     menuIconRenderer: PropTypes.func,
+    onOpenStatusChange: PropTypes.func,
+    onSelect: PropTypes.func,
   }
 
   static defaultProps = {
     menuItemOffset: DEFAULTS.offset,
     menuIconRenderer: null,
+    onOpenStatusChange: () => null,
+    onSelect: () => null,
     transitionDuration: DEFAULTS.duration
   }
 
@@ -60,33 +64,44 @@ export class PageMenu extends React.PureComponent {
     const { activeMenuItemIndex } = this.state;
     const isAllMenuItemShow = activeMenuItemIndex === this.props.children.length;
     if (isAllMenuItemShow) {
-      this.setState({ isOpen: true })
+      this.setState({ isOpen: true }, () => {
+        this.props.onOpenStatusChange(true);
+      })
       return;
     }
 
     const {
-      transitionDuration
+      transitionDuration,
+      onSelect
     } = this.props;
+    const childLen = this.props.children.length;
     this.setState({
       isOpen: true
     }, () => {
+      this.props.onOpenStatusChange(true);
       setTimeout(() => {
         this.setState({
-          activeMenuItemIndex: this.props.children.length,
+          activeMenuItemIndex: childLen
+        }, () => {
+          onSelect(childLen - 1)
         })
       }, transitionDuration / 2)
     })
   }
 
-  closeMenu = (activeMenuItemIndex) => {
+  closeMenu = (activeMenuItemIndex, cbFn = this.props.onSelect) => {
     const {
-      transitionDuration
+      transitionDuration,
+      onOpenStatusChange
     } = this.props;
     this.setState({
       activeMenuItemIndex,
     }, () => {
       setTimeout(() => {
-        this.setState({ isOpen: false })
+        this.setState({ isOpen: false }, () => {
+          onOpenStatusChange(false);
+          cbFn(activeMenuItemIndex);
+        })
       }, transitionDuration)
     })
   }
