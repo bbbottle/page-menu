@@ -1,6 +1,6 @@
 {
   "name": "@bbbottle/page-menu",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "main": "dist/index.js",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/",
