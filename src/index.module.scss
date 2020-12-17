@@ -7,7 +7,7 @@
   overflow: hidden;
 
   .hiddenMenuItemContainer {
-    top: 100% !important;
+    top: calc(100% + 20px) !important;
   }
 }
 
