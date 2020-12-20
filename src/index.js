@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import cls from 'classnames';
 
 import Style from './index.module.scss';
+import {PageMenuFSM} from './page_menu_fsm';
 
 const DEFAULTS = {
   offset: 50,
@@ -54,119 +55,106 @@ export class PageMenu extends React.PureComponent {
 
   constructor(props) {
     super(props);
+    const childLen = props.children.length;
+    this.fsm = new PageMenuFSM(childLen);
     this.state = {
-      isOpen: !!this.props.defaultOpen,
-      activeMenuItemIndex: props.children.length,
+      menuState: PageMenuFSM.CLOSED,
+      selectedIndex: childLen
     }
   }
 
-  openMenu = () => {
-    const { activeMenuItemIndex } = this.state;
-    const isAllMenuItemShow = activeMenuItemIndex === this.props.children.length;
-    if (isAllMenuItemShow) {
-      this.setState({ isOpen: true }, () => {
-        this.props.onOpenStatusChange(true);
-      })
+  transition = (input) => {
+    const currentState = this.state.menuState;
+    const menuState = this.fsm.transition(currentState, input);
+    if (menuState === undefined) {
       return;
     }
 
+    const output = this.fsm.output(menuState);
+    this.setState({ menuState, ...output})
+  };
+
+  getTransitionStyle = (index) => {
     const {
       transitionDuration,
-      onSelect
+      children
     } = this.props;
-    const childLen = this.props.children.length;
-    this.setState({
-      isOpen: true
-    }, () => {
-      this.props.onOpenStatusChange(true);
-      setTimeout(() => {
-        this.setState({
-          activeMenuItemIndex: childLen
-        }, () => {
-          onSelect(childLen - 1)
-        })
-      }, transitionDuration / 2)
-    })
-  }
 
-  closeMenu = (activeMenuItemIndex, cbFn = this.props.onSelect) => {
     const {
-      transitionDuration,
-      onOpenStatusChange
-    } = this.props;
-    this.setState({
-      activeMenuItemIndex,
-    }, () => {
-      setTimeout(() => {
-        this.setState({ isOpen: false }, () => {
-          onOpenStatusChange(false);
-          cbFn(activeMenuItemIndex);
-        })
-      }, transitionDuration)
-    })
-  }
+      isOpen,
+      selectedIndex,
+    } = this.state;
 
-  genMenuItemClickHandler = (activeMenuItemIndex) => (e) => {
-    e.stopPropagation();
-    this.closeMenu(activeMenuItemIndex);
-  }
+    const childrenLen = children.length;
 
-  renderMenuItem = (child, index) => {
+    if (isOpen && selectedIndex === childrenLen) {
+      return `all ${transitionDuration}ms`;
+    }
+
+    return (index <= selectedIndex)
+      ? `all ${transitionDuration}ms ease ${transitionDuration}ms`
+      : `left ${transitionDuration}ms ease ${transitionDuration}ms, top ${transitionDuration}ms`
+  };
+
+  getItemOffset = (index) => {
+    if (index === 0) {
+      return 0;
+    }
+
     const {
       menuItemOffset,
-      transitionDuration
     } = this.props;
     const {
       isOpen,
-      activeMenuItemIndex
+      selectedIndex: activeMenuItemIndex
     } = this.state;
-    const isHidden = index === activeMenuItemIndex + 1;
-    const isFirst = index === 0;
-    const offset = isOpen && !isFirst ? menuItemOffset : 0;
-    const leftOffset = isHidden && !isFirst ? menuItemOffset : offset;
-    return (
-      <div
-        className={cls(Style.menuItemContainer, {
-          [Style.hiddenMenuItemContainer]: isHidden
-        })}
-        onClick={this.genMenuItemClickHandler(index)}
-        style={{
-          top: offset,
-          left: leftOffset,
-          transition: `all ${transitionDuration}ms`
-        }}
-      >{child}</div>
-    )
+
+    const offset = (isOpen || index > activeMenuItemIndex)
+      ? menuItemOffset
+      : 0;
+
+    return offset * index;
+  };
+
+  genMenuItemClickHandler = (index) => (e) => {
+    e.stopPropagation();
+    this.transition(index);
+    this.props.onSelect(index);
+  };
+
+  handleIconClick = () => {
+    this.transition(PageMenuFSM.CLICK_ICON);
   }
 
-  renderMenuItems = (children, depth) => {
-    if (typeof depth === 'number') {
-      depth += 1;
-    } else {
-      depth = 0;
-    }
+  renderMenuItems = (children) => {
+    return children.map((child, index) => {
+      const { selectedIndex } = this.state;
 
-    if (children.length === 1) {
-      return this.renderMenuItem(children, depth)
-    }
+      const isHidden = index > selectedIndex;
+      const offset = this.getItemOffset(index);
 
-    const [ first, ...rest] = children;
-    return this.renderMenuItem([
-      first, this.renderMenuItems(rest, depth)
-    ], depth)
+      return (
+        <div
+          className={cls(Style.menuItemContainer, {
+            [Style.hiddenMenuItemContainer]: isHidden
+          })}
+          onClick={this.genMenuItemClickHandler(index)}
+          style={{
+            top: offset,
+            left: offset,
+            transition: this.getTransitionStyle(index)
+          }}
+        >{child}</div>
+      )
+    });
   };
 
   renderMenuIcon = (isOpen) => {
-    const {
-      menuIconRenderer
-    } = this.props;
-    const params = {
-      open: this.openMenu,
-      isOpen
-    };
+    const { menuIconRenderer } = this.props;
+    const params = { open: this.handleIconClick, isOpen };
     const menuIcon = (
       <div
-        onClick={this.openMenu}
+        onClick={this.handleIconClick}
         className={Style.menuIcon}
       >
         OPEN
@@ -189,8 +177,8 @@ export class PageMenu extends React.PureComponent {
       <div
         className={cls(Style.menu)}
       >
-        {this.renderMenuItems(children)}
         {this.renderMenuIcon(isOpen)}
+        {this.renderMenuItems(children)}
       </div>
     )
   }
