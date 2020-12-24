@@ -74,28 +74,6 @@ export class PageMenu extends React.PureComponent {
     this.setState({ menuState, ...output})
   };
 
-  getTransitionStyle = (index) => {
-    const {
-      transitionDuration,
-      children
-    } = this.props;
-
-    const {
-      isOpen,
-      selectedIndex,
-    } = this.state;
-
-    const childrenLen = children.length;
-
-    if (isOpen && selectedIndex === childrenLen) {
-      return `all ${transitionDuration}ms`;
-    }
-
-    return (index <= selectedIndex)
-      ? `all ${transitionDuration}ms ease ${transitionDuration}ms`
-      : `left ${transitionDuration}ms ease ${transitionDuration}ms, top ${transitionDuration}ms`
-  };
-
   getItemOffset = (index) => {
     if (index === 0) {
       return 0;
@@ -142,7 +120,7 @@ export class PageMenu extends React.PureComponent {
           style={{
             top: offset,
             left: offset,
-            transition: this.getTransitionStyle(index)
+            transition: `all ${this.props.transitionDuration}ms`,
           }}
         >{child}</div>
       )
