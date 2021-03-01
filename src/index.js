@@ -14,6 +14,7 @@ export const Page = (props) => {
   const {
     children,
     title,
+    open,
     style = {}
   } = props;
   return (
@@ -21,7 +22,7 @@ export const Page = (props) => {
       className={Style.menuItem}
       style={style}
     >
-      {title}
+      {open ? title : null}
       {children}
     </div>
   )
@@ -106,11 +107,10 @@ export class PageMenu extends React.PureComponent {
 
   renderMenuItems = (children) => {
     return children.map((child, index) => {
-      const { selectedIndex } = this.state;
+      const { selectedIndex, isOpen } = this.state;
 
       const isHidden = index > selectedIndex;
       const offset = this.getItemOffset(index);
-
       return (
         <div
           className={cls(Style.menuItemContainer, {
@@ -122,7 +122,7 @@ export class PageMenu extends React.PureComponent {
             left: offset,
             transition: `all ${this.props.transitionDuration}ms`,
           }}
-        >{child}</div>
+        >{React.cloneElement(child, { open: isOpen })}</div>
       )
     });
   };
