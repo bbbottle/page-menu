@@ -111,15 +111,15 @@ export class PageMenu extends React.PureComponent {
 
       const isHidden = index > selectedIndex;
       const offset = this.getItemOffset(index);
+      const translate = isHidden
+        ? `translate(${offset}px, calc(100% + 20px))`
+        : `translate(${offset}px, ${offset}px)`;
       return (
         <div
-          className={cls(Style.menuItemContainer, {
-            [Style.hiddenMenuItemContainer]: isHidden
-          })}
+          className={cls(Style.menuItemContainer)}
           onClick={this.genMenuItemClickHandler(index)}
           style={{
-            top: offset,
-            left: offset,
+            transform: translate,
             transition: `all ${this.props.transitionDuration}ms`,
           }}
         >{React.cloneElement(child, { open: isOpen })}</div>
