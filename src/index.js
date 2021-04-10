@@ -1,40 +1,32 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import cls from 'classnames';
+import React from "react";
+import PropTypes from "prop-types";
+import cls from "classnames";
 
-import Style from './index.module.scss';
-import {PageMenuFSM} from './page_menu_fsm';
+import Style from "./index.module.scss";
+import { PageMenuFSM } from "./page_menu_fsm";
 
 const DEFAULTS = {
   offset: 50,
   duration: 300,
-}
+};
 
 export const Page = (props) => {
-  const {
-    children,
-    title,
-    open,
-    style = {}
-  } = props;
+  const { children, title, open, style = {} } = props;
   return (
-    <div
-      className={Style.menuItem}
-      style={style}
-    >
+    <div className={Style.menuItem} style={style}>
       {open ? title : null}
       {children}
     </div>
-  )
-}
+  );
+};
 
 Page.propTypes = {
   title: PropTypes.oneOf([
     PropTypes.string.isRequired,
-    PropTypes.element.isRequired
+    PropTypes.element.isRequired,
   ]).isRequired,
-  style: PropTypes.shape({})
-}
+  style: PropTypes.shape({}),
+};
 
 export class PageMenu extends React.PureComponent {
   static propTypes = {
@@ -44,15 +36,15 @@ export class PageMenu extends React.PureComponent {
     menuIconRenderer: PropTypes.func,
     onOpenStatusChange: PropTypes.func,
     onSelect: PropTypes.func,
-  }
+  };
 
   static defaultProps = {
     menuItemOffset: DEFAULTS.offset,
     menuIconRenderer: null,
     onOpenStatusChange: () => null,
     onSelect: () => null,
-    transitionDuration: DEFAULTS.duration
-  }
+    transitionDuration: DEFAULTS.duration,
+  };
 
   constructor(props) {
     super(props);
@@ -60,7 +52,13 @@ export class PageMenu extends React.PureComponent {
     this.fsm = new PageMenuFSM(childLen);
     this.state = {
       menuState: PageMenuFSM.CLOSED,
-      selectedIndex: childLen
+      selectedIndex: childLen,
+    };
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    if (prevProps.children.length !== this.props.children.length) {
+      this.fsm = new PageMenuFSM(this.props.children.length);
     }
   }
 
@@ -72,7 +70,7 @@ export class PageMenu extends React.PureComponent {
     }
 
     const output = this.fsm.output(menuState);
-    this.setState({ menuState, ...output})
+    this.setState({ menuState, ...output });
   };
 
   getItemOffset = (index) => {
@@ -80,17 +78,10 @@ export class PageMenu extends React.PureComponent {
       return 0;
     }
 
-    const {
-      menuItemOffset,
-    } = this.props;
-    const {
-      isOpen,
-      selectedIndex: activeMenuItemIndex
-    } = this.state;
+    const { menuItemOffset } = this.props;
+    const { isOpen, selectedIndex: activeMenuItemIndex } = this.state;
 
-    const offset = (isOpen || index > activeMenuItemIndex)
-      ? menuItemOffset
-      : 0;
+    const offset = isOpen || index > activeMenuItemIndex ? menuItemOffset : 0;
 
     return offset * index;
   };
@@ -103,7 +94,7 @@ export class PageMenu extends React.PureComponent {
 
   handleIconClick = () => {
     this.transition(PageMenuFSM.CLICK_ICON);
-  }
+  };
 
   renderMenuItems = (children) => {
     return children.map((child, index) => {
@@ -122,8 +113,10 @@ export class PageMenu extends React.PureComponent {
             transform: translate,
             transition: `all ${this.props.transitionDuration}ms`,
           }}
-        >{React.cloneElement(child, { open: isOpen })}</div>
-      )
+        >
+          {React.cloneElement(child, { open: isOpen })}
+        </div>
+      );
     });
   };
 
@@ -131,16 +124,13 @@ export class PageMenu extends React.PureComponent {
     const { menuIconRenderer } = this.props;
     const params = { open: this.handleIconClick, isOpen };
     const menuIcon = (
-      <div
-        onClick={this.handleIconClick}
-        className={Style.menuIcon}
-      >
+      <div onClick={this.handleIconClick} className={Style.menuIcon}>
         OPEN
       </div>
     );
     if (menuIconRenderer) {
       try {
-        return menuIconRenderer(params)
+        return menuIconRenderer(params);
       } catch {
         return menuIcon;
       }
@@ -152,12 +142,10 @@ export class PageMenu extends React.PureComponent {
     const { children } = this.props;
     const { isOpen } = this.state;
     return (
-      <div
-        className={cls(Style.menu)}
-      >
+      <div className={cls(Style.menu)}>
         {this.renderMenuIcon(isOpen)}
         {this.renderMenuItems(children)}
       </div>
-    )
+    );
   }
 }
